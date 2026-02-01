@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Affiliations</a>. Address. Contacts. Motto. Etc.
+subtitle: M.Sc. Student at <a href='https://www.katz-lab.com/'>The Katz Lab</a>, Computer Science department at The Hebrew University of Jerusalem
 
 profile:
   align: right
