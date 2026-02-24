@@ -1,1 +1,80 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://r-peleg.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://r-peleg.github.io/" rel="alternate" type="text/html" hreflang="en"/><updated>2026-02-04T06:30:34+00:00</updated><id>https://r-peleg.github.io/feed.xml</id><title type="html">blank</title><subtitle>MSc Candidate at The Hebrew University of Jerusalem. </subtitle><entry><title type="html">Coming soon</title><link href="https://r-peleg.github.io/blog/2026/common-verus-pitfalls/" rel="alternate" type="text/html" title="Coming soon"/><published>2026-01-01T00:00:00+00:00</published><updated>2026-01-01T00:00:00+00:00</updated><id>https://r-peleg.github.io/blog/2026/common-verus-pitfalls</id><content type="html" xml:base="https://r-peleg.github.io/blog/2026/common-verus-pitfalls/"><![CDATA[<p>Coming soon…</p>]]></content><author><name></name></author><category term="verus"/><category term="tbd"/><summary type="html"><![CDATA[Working on it...]]></summary></entry></feed>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://r-peleg.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://r-peleg.github.io/" rel="alternate" type="text/html" hreflang="en"/><updated>2026-02-24T06:32:45+00:00</updated><id>https://r-peleg.github.io/feed.xml</id><title type="html">blank</title><subtitle>MSc Candidate at The Hebrew University of Jerusalem. </subtitle><entry><title type="html">Coming soon</title><link href="https://r-peleg.github.io/blog/2026/common-verus-pitfalls/" rel="alternate" type="text/html" title="Coming soon"/><published>2026-01-01T00:00:00+00:00</published><updated>2026-01-01T00:00:00+00:00</updated><id>https://r-peleg.github.io/blog/2026/common-verus-pitfalls</id><content type="html" xml:base="https://r-peleg.github.io/blog/2026/common-verus-pitfalls/"><![CDATA[<p>Here are some common pitfalls me and/or the LLM stumbled upon when working with Verus verified code generation, and I wanted to share.</p> <h1 id="correct-but-not-proven">Correct but not proven</h1> <p>When the code works perfectly, but the verifier cannot prove it due to technical limitations or missing information.</p> <h2 id="loop-isolation">Loop isolation</h2> <p>Look at that code:</p> <pre><code class="language-verus">fn func(n: usize) -&gt; (result: Vec&lt;i32&gt;)
+    requires
+        n &lt;= 1000
+    ensures
+        result@.len() == n,
+        forall|i: int| 0 &lt;= i &lt; result@.len() ==&gt; result[i] == n
+{
+    let mut res: Vec&lt;i32&gt; = Vec::new();
+    let mut i: usize = 0;
+    while i &lt; n
+        invariant
+            0 &lt;= i &lt;= n,
+            res@.len() == i,
+            forall|j: int| 0 &lt;= j &lt; res@.len() ==&gt; res[j] == n
+        decreases n - i
+    {
+        res.push(n as i32);
+        i += 1;
+    }
+    res
+}
+</code></pre> <p>Seems pretty valid, but it receive the error:</p> <div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>error: invariant not satisfied at end of loop body
+  --&gt; zzz.rs:24:13
+   |
+24 |             forall|j: int| 0 &lt;= j &lt; res@.len() ==&gt; res[j] == n
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+note: recommendation not met: value may be out of range of the target type (use `#[verifier::truncate]` on the cast to silence this warning)
+  --&gt; zzz.rs:27:18
+   |
+27 |         res.push(n as i32);
+   |                  ^
+
+verification results:: 1 verified, 1 errors
+error: aborting due to 1 previous error
+</code></pre></div></div> <p>Why is that? Verus cannot prove it is safe to case <code class="language-plaintext highlighter-rouge">i</code> into <code class="language-plaintext highlighter-rouge">i32</code>, despite knowing <code class="language-plaintext highlighter-rouge">0 &lt;= i &lt;= n</code>. This is because it erases the knowledge about <code class="language-plaintext highlighter-rouge">n</code> when entering the loop, for performance reasons. This can be resolved by adding a loop invariant:</p> <div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">fn func(n: usize) -&gt; (result: Vec&lt;i32&gt;)
+</span>    requires
+        n &lt;= 1000
+    ensures
+        result@.len() == n,
+        forall|i: int| 0 &lt;= i &lt; result@.len() ==&gt; result[i] == n
+{
+    let mut res: Vec&lt;i32&gt; = Vec::new();
+    let mut i: usize = 0;
+    while i &lt; n
+        invariant
+<span class="gi">+            n &lt;= 1000,
+</span>            0 &lt;= i &lt;= n,
+            res@.len() == i,
+            forall|j: int| 0 &lt;= j &lt; res@.len() ==&gt; res[j] == n
+        decreases n - i
+    {
+        res.push(n as i32);
+        i += 1;
+    }
+    res
+}
+</code></pre></div></div> <p>Or by disabling loop isolation</p> <div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">fn func(n: usize) -&gt; (result: Vec&lt;i32&gt;)
+</span>    requires
+        n &lt;= 1000
+    ensures
+        result@.len() == n,
+        forall|i: int| 0 &lt;= i &lt; result@.len() ==&gt; result[i] == n
+{
+    let mut res: Vec&lt;i32&gt; = Vec::new();
+    let mut i: usize = 0;
+<span class="gi">+    #[verifier::loop_isolation(false)]
+</span>    while i &lt; n
+        invariant
+            0 &lt;= i &lt;= n,
+            res@.len() == i,
+            forall|j: int| 0 &lt;= j &lt; res@.len() ==&gt; res[j] == n
+        decreases n - i
+    {
+        res.push(n as i32);
+        i += 1;
+    }
+    res
+}
+</code></pre></div></div>]]></content><author><name></name></author><category term="verus"/><category term="tbd"/><summary type="html"><![CDATA[Working on it...]]></summary></entry></feed>
