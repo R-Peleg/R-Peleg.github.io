@@ -10,10 +10,13 @@ categories: verus
 Here are some common pitfalls me and/or the LLM stumbled upon when working with Verus verified code generation, and I wanted to share.
 
 # Correct but not proven
+
 When the code works perfectly, but the verifier cannot prove it due to technical limitations or missing information.
 
 ## Loop isolation
+
 Look at that code:
+
 ```verus
 fn func(n: usize) -> (result: Vec<i32>)
     requires
@@ -39,6 +42,7 @@ fn func(n: usize) -> (result: Vec<i32>)
 ```
 
 Seems pretty valid, but it receive the error:
+
 ```text
 error: invariant not satisfied at end of loop body
   --> zzz.rs:24:13
@@ -57,6 +61,7 @@ error: aborting due to 1 previous error
 ```
 
 Why is that? Verus cannot prove it is safe to case `i` into `i32`, despite knowing `0 <= i <= n`. This is because it erases the knowledge about `n` when entering the loop, for performance reasons. This can be resolved by adding a loop invariant:
+
 ```diff
 fn func(n: usize) -> (result: Vec<i32>)
     requires
@@ -83,6 +88,7 @@ fn func(n: usize) -> (result: Vec<i32>)
 ```
 
 Or by disabling loop isolation
+
 ```diff
 fn func(n: usize) -> (result: Vec<i32>)
     requires
