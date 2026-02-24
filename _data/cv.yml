@@ -1,7 +1,7 @@
 cv:
   name: Reuven Peleg
   label: Researcher
-  email: reuven.peleg <at> mail.huji.ac.il
+  email: reuven.peleg@mail.huji.ac.il
   location: Jerusalem, Israel
   image: ""
   summary: A Master's degree student at Hebrew University of Jerusalem Israel.
@@ -12,7 +12,7 @@ cv:
 
 
   sections:
-    Education:
+    # Education:
       # - institution: University of Zurich
       #   location: Zurich, Switzerland
       #   url: https://www.uzh.ch/
@@ -26,7 +26,7 @@ cv:
       #     - Description 1.
       #     - Description 2.
 
-    Experience:
+    # Experience:
       # - company: Institute for Advanced Study, Princeton University
       #   position: Professor of Theoretical Physics
       #   location: Princeton University, NJ
@@ -37,7 +37,7 @@ cv:
       #     - Relativity
       #     - Description 2.
 
-    Publications:
+    # Publications:
       # - title: Zur Elektrodynamik bewegter Körper
       #   authors:
       #     - Albert Einstein
@@ -46,7 +46,7 @@ cv:
       #   url: https://en.wikisource.org/wiki/Translation:On_the_Electrodynamics_of_Moving_Bodies
       #   summary: It concerned an interpretation of the Michelson–Morley experiment and the properties of light and time. Special relativity incorporates the principle that the speed of light is the same for all inertial observers regardless of the state of motion of the source.
 
-    Skills:
+    # Skills:
       # - name: Physics
       #   level: Master
       #   icon: fa-solid fa-hashtag
@@ -59,7 +59,7 @@ cv:
       - name: English
         summary: "Fluent"
 
-    Interests:
+    # Interests:
       # - name: Physics
       #   icon: fa-solid fa-tag
       #   keywords: "Quantum Mechanics, Quantum Computing, Quantum Information, Quantum Cryptography, Quantum Communication, Quantum Teleportation"
