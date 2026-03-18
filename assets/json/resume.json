@@ -73,13 +73,7 @@
       "name": "Computer Science",
       "level": "Graduate",
       "icon": "fa-solid fa-hashtag",
-      "keywords": [
-        "Formal Verification",
-        "Large Language Models",
-        "AI Safety",
-        "Computer Vision",
-        "Machine Learning"
-      ]
+      "keywords": ["Formal Verification", "Large Language Models", "AI Safety", "Computer Vision", "Machine Learning"]
     }
   ],
   "languages": [
